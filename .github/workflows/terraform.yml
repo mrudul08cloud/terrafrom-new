@@ -1,36 +1,36 @@
-name: Terraform Deployment
+name: Terraform Pipeline
 
 on:
   push:
     branches:
-      - dev
       - main
 
 jobs:
-  deploy:
+  terraform:
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: terraform
-
     steps:
-      - uses: actions/checkout@v3
-      - uses: hashicorp/setup-terraform@v3
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-      - uses: aws-actions/configure-aws-credentials@v2
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-south-1
+          aws-region: us-east-1
 
-      - run: terraform init
+      - name: Terraform Init
+        run: terraform init
 
-      - run: |
-          if [ "${GITHUB_REF##*/}" = "main" ]; then
-            terraform workspace select prod || terraform workspace new prod
-          else
-            terraform workspace select dev || terraform workspace new dev
-          fi
+      - name: Terraform Validate
+        run: terraform validate
 
-      - run: terraform apply -auto-approve
+      - name: Terraform Plan
+        run: terraform plan
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
